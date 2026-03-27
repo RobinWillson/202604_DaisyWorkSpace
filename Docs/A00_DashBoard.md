@@ -64,3 +64,33 @@ my-daisy-workspace/
 ## 6. 資料庫存取層 (Database Layer)
 * 此專案主要對接的是外部的 **PostgreSQL** 與未來可能獨立的 **RAG Vector Database**。
 * 不管子系統有多少個，皆讀取 `database/` 內的同一組設定，統整資料庫連接池 (Connection Pool) 的管理（例如：設定 Prisma Client 的單例模式 Singletons），防止連線數因多個 APP 請求而爆掉。
+
+# 開始建置 (Implementation Plan)
+
+以下是落實 Modular Monolith 架構與 Dashboard 首頁的 Step-by-Step 計畫。我們將分為幾個階段來逐步推進：
+
+## Phase 1: 專案基礎建設與依賴清理 (Foundation Setup)
+目前您已經將所有的子應用檔案放入，我們需要將其整理成單一 Next.js 專案規格。
+1. **目錄結構重構：** 根目錄重新建立標準的 Next.js 檔案結構
+2. **安裝共用依賴：** 設定全域的 TailwindCSS、字體、Icon (例如 `lucide-react`)。
+3. **設定 `src/app/(dashboard)` 路由分組：** 建立專屬於 Dashboard 總覽的資料夾結構。
+
+## Phase 2: 共用版面開發 (Core Layout Implementation)
+這是讓所有子 APP 看起來像是一個整體系統的關鍵步驟。
+1. **建立全域側邊欄 (`Sidebar` Component)：** 包含前往「首頁、ToDoList、第二大腦、股票觀測」等導覽按鈕。
+2. **建立全域頂部列 (`Header` Component)：** 包含麵包屑導航 (Breadcrumbs)、目前的使用者登入狀態或全域搜尋列。
+3. **套用 Layout：** 在 `src/app/layout.tsx` (或 `(dashboard)/layout.tsx`) 中套用 `Sidebar` 與 `Header`，這樣切換不同系統時，共用元件就不會重新渲染。
+
+## Phase 3: Dashboard 首頁實作 (Dashboard Entry Page)
+開發使用者登入後看見的第一個畫面 (`src/app/(dashboard)/page.tsx`)。
+1. **歡迎面版與統計資訊：** 快速顯示來自不同 APP 的摘要 (例如本週待辦任務數量、今日股票大盤、目前筆記數量)。
+2. **快速入口 (Quick Links)：** 設計美觀的卡片，點擊可直接進入各個子系統。
+
+## Phase 4: 子系統路由佔位與 Error 防護 (Infrastructure & Boundaries)
+1. **建立佔位路由：** 建立 `src/app/todo-list/page.tsx`、`src/app/second-brain/page.tsx` 作為接入子系統的前處理。
+2. **實作 Error Boundary：** 在各個系統的根目錄建立 `error.tsx`，捕捉各自的錯誤，確保即使 `todo-list` 壞了，`dashboard` 與 `second-brain` 仍可正常運作。
+3. **定義資料庫層：** 在 `database/` 目錄建立 Prisma configuration 與 Schema 檔案，完成與 PostgreSQL 的初始連線。
+
+---
+
+如果計畫沒問題，我們可以先從 **Phase 1** 開始進行。您現有的檔案似乎還偏向把 `.next` 等設定檔放在特定子目錄，我們需要先決定是要在 `my-daisy-workspace` (您目前的目錄) 根目錄直接作為 Next.js 根目錄，還是有一個特定的入口？
