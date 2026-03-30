@@ -12,7 +12,10 @@ import {
   Users, 
   ShoppingBag, 
   Settings,
-  ChevronLeft
+  ChevronLeft,
+  LogOut,
+  User,
+  ShieldCheck
 } from "lucide-react";
 import { clsx, type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
@@ -34,7 +37,13 @@ const navItems = [
 
 export default function Sidebar() {
   const [collapsed, setCollapsed] = useState(false);
+  const [showUserMenu, setShowUserMenu] = useState(false);
   const pathname = usePathname();
+
+  const handleLogout = async () => {
+    await fetch('/api/auth', { method: 'DELETE' });
+    window.location.reload();
+  };
 
   return (
     <aside 
@@ -103,15 +112,64 @@ export default function Sidebar() {
       </nav>
 
       {/* User Profile snippet at bottom */}
-      <div className="p-4 mt-auto border-t border-white/10">
-        <div className="flex items-center gap-3 cursor-pointer hover:bg-white/5 p-2 -mx-2 rounded-lg transition-colors">
-          <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=Robin" alt="User" className="w-9 h-9 rounded-full bg-zinc-800 flex-shrink-0 ring-2 ring-transparent group-hover:ring-purple-500 transition-all" />
-          <div className={cn("flex flex-col whitespace-nowrap overflow-hidden transition-all duration-300", collapsed && "opacity-0 w-0")}>
-            <span className="text-sm font-medium text-zinc-100">Robin Willson</span>
-            <span className="text-xs text-zinc-500">Admin</span>
+      <div className="p-4 mt-auto border-t border-white/10 relative">
+        {/* User Status Popover */}
+        {showUserMenu && (
+          <div 
+            className={cn(
+              "absolute bottom-full mb-2 bg-[#1c1c1c] border border-white/10 rounded-2xl p-2 shadow-2xl min-w-[180px] z-[60] animate-in fade-in slide-in-from-bottom-2 duration-200",
+              collapsed ? "left-4" : "left-4 right-4"
+            )}
+          >
+            <div className="px-3 py-2 mb-1 border-b border-white/5">
+               <p className="text-[10px] text-zinc-500 uppercase tracking-widest font-bold">User Account</p>
+            </div>
+            <button className="w-full flex items-center gap-3 px-3 py-2.5 text-zinc-400 hover:text-white hover:bg-white/5 rounded-xl transition-colors text-sm text-left group">
+              <User className="w-4 h-4 text-zinc-500 group-hover:text-purple-400" />
+              Profile Settings
+            </button>
+            <button className="w-full flex items-center gap-3 px-3 py-2.5 text-zinc-400 hover:text-white hover:bg-white/5 rounded-xl transition-colors text-sm text-left group">
+              <ShieldCheck className="w-4 h-4 text-zinc-500 group-hover:text-emerald-400" />
+              Security
+            </button>
+            <div className="h-px bg-white/5 my-1" />
+            <button 
+              onClick={handleLogout}
+              className="w-full flex items-center gap-3 px-3 py-2.5 text-rose-400 hover:bg-rose-500/10 rounded-xl transition-colors text-sm text-left group"
+            >
+              <LogOut className="w-4 h-4" />
+              Logout Session
+            </button>
           </div>
+        )}
+
+        <div className="flex items-center justify-between group">
+          <div 
+            onClick={() => setShowUserMenu(!showUserMenu)}
+            className="flex items-center gap-3 p-1 rounded-lg hover:bg-white/5 transition-colors overflow-hidden cursor-pointer flex-1"
+          >
+            <div className="relative">
+              <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=Robin" alt="User" className="w-9 h-9 rounded-full bg-zinc-800 flex-shrink-0 ring-2 ring-transparent group-hover:ring-purple-500 transition-all" />
+              <div className="absolute -right-0.5 -bottom-0.5 w-3 h-3 bg-emerald-500 border-2 border-[#111111] rounded-full" />
+            </div>
+            <div className={cn("flex flex-col whitespace-nowrap overflow-hidden transition-all duration-300", collapsed && "opacity-0 w-0")}>
+              <span className="text-sm font-medium text-zinc-100">Robin Willson</span>
+              <span className="text-xs text-zinc-500">Admin Account</span>
+            </div>
+          </div>
+          
+          {!collapsed && (
+            <button 
+              onClick={handleLogout}
+              className="p-2 text-zinc-500 hover:text-rose-400 hover:bg-rose-500/10 rounded-lg transition-all cursor-pointer"
+              title="登出系統"
+            >
+              <LogOut className="w-4 h-4" />
+            </button>
+          )}
         </div>
       </div>
+
     </aside>
   );
 }

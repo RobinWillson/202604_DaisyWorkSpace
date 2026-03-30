@@ -4,9 +4,8 @@ This document outlines the available REST APIs for the **Second Brain** knowledg
 
 > **Base URL**: `/api/second-brain/*`
 > **Auth**: `x-api-key: [Your-Assigned-API-Key]` header on all requests.
-> **Storage Mode**: Controlled by `USE_DATABASE` env var.
-> - `USE_DATABASE=false` (or unset) + `NODE_ENV=development` → **Local filesystem** (`data/second-brain/`)
-> - `USE_DATABASE=true` or `NODE_ENV=production` → **Supabase PostgreSQL** via Prisma
+> **Storage**: Supabase PostgreSQL via Prisma (always on).
+> **Required Env Var**: `DATABASE_URL` — Supabase connection string (set in Zeabur Variables or local `.env`).
 
 ---
 
@@ -176,10 +175,8 @@ The five PARA root folders are **always present** and **cannot be deleted or mov
 
 ---
 
-## 🔄 Storage Mode Summary
-
-| Scenario | Config | Storage |
+| Variable | Required | Description |
 |---|---|---|
-| Local dev (fast) | `NODE_ENV=development`, no `USE_DATABASE` | Local `data/second-brain/` |
-| DB dev (test cloud) | `USE_DATABASE=true` | Supabase PostgreSQL |
-| Production | `NODE_ENV=production` | Supabase PostgreSQL |
+| `DATABASE_URL` | ✅ 必填 | Supabase PostgreSQL 連線字串 |
+| `API_SECRET_KEY` | ✅ 必填 | `x-api-key` 驗證用的秘密金鑰 |
+| `NODE_ENV` | 建議設定 `production` | 在 Zeabur 部署時設為 `production` |
