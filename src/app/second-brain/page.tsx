@@ -78,14 +78,14 @@ function SubSidebar({ tree, onSelectFile, onCreateFile, onCreateFolder, onRename
                 <div className="flex flex-col">
                   <div
                     onClick={ (e) => toggleFolder(node.id || node.path, e) }
-                    className="group relative flex items-center justify-between text-zinc-400 font-medium py-1.5 px-2 rounded-md hover:bg-white/5 hover:text-zinc-200 cursor-pointer transition-colors select-none"
+                    className="group relative flex items-center justify-between text-zinc-400 font-medium py-1.5 px-2 rounded-md hover:bg-white/5 hover:text-zinc-200 cursor-pointer transition-colors select-none w-full"
                   >
-                    <div className="flex items-center">
-                      <Folder className={ `w-4 h-4 mr-2 transition-colors ${isExpanded ? 'text-purple-400' : 'text-zinc-500'}` } />
-                      { node.name }
+                    <div className="flex-1 min-w-0 flex items-center mr-2" title={node.name}>
+                      <Folder className={ `shrink-0 w-4 h-4 mr-2 transition-colors ${isExpanded ? 'text-purple-400' : 'text-zinc-500'}` } />
+                      <span className="truncate">{ node.name }</span>
                     </div>
 
-                    <div className="hidden group-hover:flex items-center">
+                    <div className="shrink-0 hidden group-hover:flex items-center">
                       <button
                         onClick={ (e) => {
                           e.stopPropagation();
@@ -111,14 +111,15 @@ function SubSidebar({ tree, onSelectFile, onCreateFile, onCreateFolder, onRename
                 </div>
               ) : (
                 <div
-                  className="group relative flex items-center justify-between text-zinc-400 hover:bg-white/5 py-1.5 px-2 rounded-md cursor-pointer transition-colors select-none"
+                  className="group relative flex items-center justify-between text-zinc-400 hover:bg-white/5 py-1.5 px-2 rounded-md cursor-pointer transition-colors select-none w-full"
                   onClick={ () => onSelectFile(node.id || node.path) }
                 >
-                  <div className="flex items-center">
-                    <FileText className="w-3.5 h-3.5 mr-2 text-zinc-500 group-hover:text-purple-400 transition-colors" /> { node.name }
+                  <div className="flex-1 min-w-0 flex items-center mr-2" title={node.name}>
+                    <FileText className="shrink-0 w-3.5 h-3.5 mr-2 text-zinc-500 group-hover:text-purple-400 transition-colors" />
+                    <span className="truncate">{ node.name }</span>
                   </div>
 
-                  <div className="hidden group-hover:flex items-center">
+                  <div className="shrink-0 hidden group-hover:flex items-center">
                     <button
                       onClick={ (e) => {
                         e.stopPropagation();

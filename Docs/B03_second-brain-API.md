@@ -1,11 +1,30 @@
 # Second Brain API Documentation for AI Agents
 
-This document outlines the available REST APIs for the **Second Brain** knowledge management system (Modular Monolith + PostgreSQL / Hybrid Local-FS mode).
+This document outlines the available REST APIs for the **Second Brain** knowledge management system (Modular Monolith + PostgreSQL / DB-Only mode).
 
 > **Base URL**: `/api/second-brain/*`
 > **Auth**: `x-api-key: [Your-Assigned-API-Key]` header on all requests.
-> **Storage**: Supabase PostgreSQL via Prisma (always on).
-> **Required Env Var**: `DATABASE_URL` — Supabase connection string (set in Zeabur Variables or local `.env`).
+> **Storage**: Supabase PostgreSQL via Prisma (Always-on).
+> **Required Env Var**: `DATABASE_URL` — Supabase connection string (internal communication between Server and DB).
+
+---
+
+## 🔒 Authentication & Access
+
+Access to all APIs requires valid authentication.
+
+1. **AI / Programmatic Access**: Provide the `x-api-key` header.
+2. **Browser / UI Access**: Handled via secure HTTP-only cookies (Session-based).
+
+### Required Environment Variables (Set in Zeabur / .env)
+
+| Variable | Required | Description |
+|---|---|---|
+| `DATABASE_URL` | ✅ Yes | Supabase PostgreSQL connection string. Internal use only. |
+| `DB_API_SECRET_KEY` | ✅ Yes | The secret key to validate against the `x-api-key` header. |
+| `DB_AUTH_USERNAME` | ✅ Yes | Username for Dashboard/Web login. |
+| `DB_AUTH_PASSWORD` | ✅ Yes | Password for Dashboard/Web login. |
+| `NODE_ENV` | Optional | Set to `production` when deploying to Zeabur. |
 
 ---
 
@@ -18,12 +37,12 @@ Returns the complete folder & file tree.
 ```json
 [
   {
-    "id": "00-inbox",
+    "id": "uuid-here",
     "name": "00-inbox",
     "type": "folder",
     "children": [
       {
-        "id": "00-inbox/idea.md",
+        "id": "uuid-here",
         "name": "idea",
         "type": "file"
       }
@@ -31,7 +50,7 @@ Returns the complete folder & file tree.
   }
 ]
 ```
-> In DB mode, `id` fields are UUIDs. In local mode, `id` is the relative path (e.g. `00-inbox/idea.md`).
+> In DB-only mode, `id` fields are always UUIDs.
 
 ---
 
@@ -39,7 +58,7 @@ Returns the complete folder & file tree.
 
 ### `GET /api/second-brain/file?path={id}`
 Read a note's content.
-- **`id`**: UUID (DB mode) or relative path like `00-inbox/idea.md` (local mode)
+- **`id`**: UUID of the note.
 
 **Response**: `{ "content": "# Title\n..." }`
 
@@ -54,14 +73,12 @@ Create or update a note.
 { "content": "# My Note\n..." }
 ```
 
-**Response**: Note object (DB) or `{ "success": true }` (local)
+**Response**: Note object (JSON)
 
 ---
 
 ### `DELETE /api/second-brain/file?path={id}`
-Soft-delete a note.
-- DB mode: sets `is_deleted = true`
-- Local mode: physically removes the file
+Soft-delete a note (sets `is_deleted = true`).
 
 **Response**: `{ "success": true }`
 
@@ -76,18 +93,18 @@ Create a new folder.
 ```json
 { "parentPath": "00-inbox", "name": "my-project" }
 ```
-> `parentPath` can be a folder name (e.g. `00-inbox`) or a UUID (sub-folders in DB mode).
+> `parentPath` can be a folder name (e.g. `00-inbox`) or a UUID.
 
-**Response**: Folder object (DB) or `{ "success": true }` (local)
+**Response**: Folder object (JSON)
 
 ---
 
 ### `DELETE /api/second-brain/folder?id={id}`
 Delete a folder and all its contents recursively.
-- DB mode: recursively soft-deletes all notes, then hard-deletes the folder chain.
-- Local mode: `rm -rf`
+- Sets `is_deleted = true` for all nested notes.
+- Removes the folder records from DB.
 
-> ⚠️ Core folders (`00-inbox` ~ `04-archive`) should be skipped by convention — UI enforces this.
+> ⚠️ Core folders (`00-inbox` ~ `04-archive`) cannot be deleted.
 
 **Response**: `{ "success": true }`
 
@@ -101,14 +118,12 @@ Rename a file or folder.
 **Body**
 ```json
 {
-  "oldPath": "00-inbox/old-name.md",
-  "newName": "new-name",
+  "oldPath": "uuid-of-item",
+  "newName": "new-title-without-extension",
   "type": "file"
 }
 ```
 > `type`: `"file"` or `"folder"`
-> In DB mode, `oldPath` is a UUID; in local mode, it's a relative path.
-> The `.md` extension is handled automatically — do not include it in `newName`.
 
 **Response**: `{ "success": true }`
 
@@ -122,14 +137,13 @@ Move a file or folder to a different parent.
 **Body**
 ```json
 {
-  "sourcePath": "00-inbox/idea.md",
-  "targetPath": "01-projects",
+  "sourcePath": "uuid-of-item",
+  "targetPath": "target-folder-uuid-or-name",
   "type": "file",
-  "overwriteName": "idea_copy"
+  "overwriteName": "optional_new_name"
 }
 ```
-> - `targetPath`: folder name or UUID. Empty string (`""`) = root.
-> - `overwriteName` *(optional)*: if provided, the item is renamed during the move (used for conflict resolution).
+> - `targetPath`: target folder UUID or name. Empty string (`""`) = root.
 
 **Response**: `{ "success": true }`
 
@@ -150,13 +164,13 @@ Full-text search across all notes.
 {
   "results": [
     {
-      "id": "uuid-or-path",
+      "id": "uuid-here",
       "title": "2026S1 財報",
       "preview": "...matching excerpt...",
-      "path": "01-projects/台積電"
+      "path": "01-projects / 2026S1 財報"
     }
   ]
-}
+]
 ```
 
 ---
@@ -172,11 +186,3 @@ The five PARA root folders are **always present** and **cannot be deleted or mov
 | `02-areas` | 長期維護的領域知識 |
 | `03-resources` | 參考資料庫 |
 | `04-archive` | 已完成或封存內容 |
-
----
-
-| Variable | Required | Description |
-|---|---|---|
-| `DATABASE_URL` | ✅ 必填 | Supabase PostgreSQL 連線字串 |
-| `API_SECRET_KEY` | ✅ 必填 | `x-api-key` 驗證用的秘密金鑰 |
-| `NODE_ENV` | 建議設定 `production` | 在 Zeabur 部署時設為 `production` |
